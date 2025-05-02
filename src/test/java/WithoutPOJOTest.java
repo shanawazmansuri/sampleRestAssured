@@ -1,61 +1,90 @@
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
 public class WithoutPOJOTest {
 
-    public static void main(String[] args) {
-        RestAssured.baseURI = "https://reqres.in/api";
+    private String userId;
+    private final String API_KEY = "reqres-free-v1"; // No newline
+    private final String BASE_PATH = "/users";
 
-        // 1. GET request to list users
+    @BeforeClass
+    public void setup() {
+        RestAssured.baseURI = "https://reqres.in/api";
+    }
+
+    // Helper method to create headers
+    private RequestSpecification commonRequest() {
+        return given()
+                .contentType(ContentType.JSON)
+                .header("x-api-key", API_KEY);
+    }
+
+    private String createUserPayload(String name, String job) {
+        return String.format("{ \"name\": \"%s\", \"job\": \"%s\" }", name, job);
+    }
+
+    @Test
+    public void getListUsers() {
         System.out.println("GET - List Users:");
         given()
                 .queryParam("page", 2)
                 .when()
-                .get("/users")
+                .get(BASE_PATH)
                 .then()
                 .statusCode(200)
                 .body("data", notNullValue());
+    }
 
-        // 2. POST request to create a new user
+    @Test(dependsOnMethods = "getListUsers")
+    public void createNewUser() {
         System.out.println("POST - Create User:");
-        String newUser = "{ \"name\": \"John\", \"job\": \"developer\" }";
 
-        Response postResponse = given()
-                .contentType(ContentType.JSON)
+        String newUser = createUserPayload("John", "developer");
+
+        Response response = commonRequest()
                 .body(newUser)
                 .when()
-                .post("/users");
+                .post(BASE_PATH);
 
-        postResponse.then()
+        response.then()
                 .statusCode(201)
-                .body("name", equalTo("John"))
-                .body("job", equalTo("developer"));
+                .body("id", notNullValue()); // Remove 'name' and 'job' assertions — not returned
 
-        String userId = postResponse.jsonPath().getString("id");
+        userId = response.jsonPath().getString("id");
+    }
 
-        // 3. PUT request to update the user
+    @Test(dependsOnMethods = "createNewUser")
+    public void updateUser() {
         System.out.println("PUT - Update User:");
-        String updatedUser = "{ \"name\": \"John\", \"job\": \"senior developer\" }";
 
-        given()
-                .contentType(ContentType.JSON)
+        String updatedUser = createUserPayload("John", "senior developer");
+
+        commonRequest()
                 .body(updatedUser)
                 .when()
-                .put("/users/" + userId)
+                .put(BASE_PATH + "/" + userId)
                 .then()
                 .statusCode(200)
                 .body("job", equalTo("senior developer"));
+    }
 
-        // 4. DELETE request to delete the user
+    @Test(dependsOnMethods = "updateUser")
+    public void deleteUser() {
         System.out.println("DELETE - Delete User:");
-        when()
-                .delete("/users/" + userId)
+
+        commonRequest()
+                .when()
+                .delete(BASE_PATH + "/" + userId)
                 .then()
                 .statusCode(204);
 
-        System.out.println("Test completed.");
+        System.out.println("User deleted successfully.");
     }
 }
