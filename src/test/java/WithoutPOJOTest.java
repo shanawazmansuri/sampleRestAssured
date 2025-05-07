@@ -44,7 +44,7 @@ public class WithoutPOJOTest {
 
     @Test(dependsOnMethods = "getListUsers")
     public void createNewUser() {
-        System.out.println("POST - Create User:");
+        System.out.println("POST - Create User:-");
 
         String newUser = createUserPayload("John", "developer");
 
@@ -62,7 +62,7 @@ public class WithoutPOJOTest {
 
     @Test(dependsOnMethods = "createNewUser")
     public void updateUser() {
-        System.out.println("PUT - Update User:");
+        System.out.println("PUT - Update User:-");
 
         String updatedUser = createUserPayload("John", "senior developer");
 
@@ -77,7 +77,7 @@ public class WithoutPOJOTest {
 
     @Test(dependsOnMethods = "updateUser")
     public void deleteUser() {
-        System.out.println("DELETE - Delete User:");
+        System.out.println("DELETE - Delete User:-");
 
         commonRequest()
                 .when()
