@@ -32,7 +32,7 @@ public class WithoutPOJOTest {
 
     @Test
     public void getListUsers() {
-        System.out.println("GET - List Users:-");
+        System.out.println("GET - List Users:--");
         given()
                 .queryParam("page", 2)
                 .when()
